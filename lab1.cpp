@@ -13,7 +13,7 @@ void average(mpf_t* array, int size, mpf_t mpf_size, mpf_t result){
     mpf_div(result, result, mpf_size);
 }
 
-void variance(mpf_t* array, int size, mpf_t mpf_size, mpf_t average, mpf_t result){
+void variance_period(mpf_t* array, int size, mpf_t mpf_size, mpf_t average, mpf_t variance, mpf_t period){
 
     mpf_t temp;
     mpf_init(temp);
@@ -22,27 +22,23 @@ void variance(mpf_t* array, int size, mpf_t mpf_size, mpf_t average, mpf_t resul
 
         mpf_sub(temp, array[i], average);
         mpf_pow_ui(temp, temp, 2);
-        mpf_add(result, result, temp);
+        mpf_add(variance, variance, temp);
     }
 
     mpf_clear(temp);
 
-    mpf_div(result, result, mpf_size);
-
-}
-
-void period(mpf_t* array, int size, mpf_t result){
+    mpf_div(variance, variance, mpf_size);
 
 }
 
 int main() {
 
-    FILE * pFile;
     const int d = 16;
     long long int num_count;
     mpf_t num_count_mpf;
     mpf_t average_result, variance_result, period_result;
     cout.precision(d);
+    ios::sync_with_stdio(false);
 
     // 2^24 numbers
     mpf_t* numbers = new mpf_t[16777216];
@@ -53,21 +49,20 @@ int main() {
     mpf_init(average_result);
     mpf_init(variance_result);
     mpf_init(period_result);
+    mpf_init(num_count_mpf);
+    num_count = 0;
 
-    pFile = fopen ("MiSSLab1/r1" , "r");
-
-    if(pFile == NULL){
-        cout << "Could not open file" << endl;
-        return 0;
+    while(cin >> numbers[num_count]){
+	    num_count++;
     }
-
-    while(mpf_inp_str(numbers[num_count], pFile, 10)){
-        num_count++;
-    }
+    
+   // while(gmp_scanf("%Ff", numbers[num_count]) != EOF){
+   //     num_count++;
+   // }
+   
     mpf_set_si(num_count_mpf, num_count);
-
     average(numbers, num_count, num_count_mpf, average_result);
-    variance(numbers, num_count, num_count_mpf, average_result, variance_result);
+    variance_period(numbers, num_count, num_count_mpf, average_result, variance_result, period_result);
 
     cout << average_result << endl;
     cout << variance_result << endl;
