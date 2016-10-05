@@ -30,6 +30,19 @@ void variance_period(mpf_t* array, int size, mpf_t mpf_size, mpf_t average, mpf_
     mpf_div(variance, variance, mpf_size);
 
 }
+void period(mpf_t* array, int size, mpf_t sizempf, mpf_t period){
+
+	int periodLen = 1;
+	for(int i=1;i<size;i++)
+	{
+		if(array[i]!=array[i%(periodLen-1)]){
+			periodLen++;
+		}else{
+			periodLen=i;
+		}
+	}
+//	mpf_set_si(period, periodLen);
+}
 
 int main() {
 
@@ -63,6 +76,7 @@ int main() {
     mpf_set_si(num_count_mpf, num_count);
     average(numbers, num_count, num_count_mpf, average_result);
     variance_period(numbers, num_count, num_count_mpf, average_result, variance_result, period_result);
+    period(numbers, num_count, num_count_mpf, period_result);
 
     cout << average_result << endl;
     cout << variance_result << endl;
