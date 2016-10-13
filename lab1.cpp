@@ -31,6 +31,7 @@ void print(mpf_class number, int precision){
     result.assign(buffer, index);
     cout << result << endl;
 }
+
 int period(vector<mpz_class> numbers, int size){
 
     int periodLen = 0;
