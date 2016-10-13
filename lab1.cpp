@@ -2,13 +2,15 @@
 #include <gmp.h>
 #include <gmpxx.h>
 #include <iomanip>
+#include <vector>
+#include <math.h>
 
 using namespace std;
 
-void adjust_zeros(mpf_t number, string* result, int precision){
+void print(mpf_class number, int precision){
 
 	char* buffer = new char[300];
-	int n = gmp_sprintf(buffer, "%.*Ff", precision, number);
+	int n = gmp_sprintf(buffer, "%.*Ff", precision, number.get_mpf_t());
 
 	int index = n;
 	bool doRemove = true;
@@ -25,38 +27,21 @@ void adjust_zeros(mpf_t number, string* result, int precision){
 		index--;
 	}
 	buffer[index+1] = '\n';
-	(*result).assign(buffer, index);
-
+    string result;
+    result.assign(buffer, index);
+    cout << result << endl;
 }
-void average(mpf_t *array, int size, mpf_t mpf_size, mpf_t result) {
+int period(vector<mpz_class> numbers, int size){
 
-    for (int i = 0; i < size; i++) {
-        mpf_add(result, result, array[i]);
-    }
-
-    mpf_div(result, result, mpf_size);
-}
-
-void variance_period(mpf_t *array, int size, mpf_t mpf_size, mpf_t average, mpf_t variance, mpf_t period) {
-
-    mpf_t temp, square;
-    mpf_init(temp);
-    mpf_init(square);
     int periodLen = 0;
 
     for (int i = 0; i < size; i++) {
-        // variance
-        mpf_sub(temp, array[i], average);
-        mpf_pow_ui(square, temp, 2);
-        mpf_add(variance, variance, square);
-
-        //period
         if (i != 0) {
             if (periodLen != 0) {
-                if (mpf_cmp(array[i], array[i % periodLen]) != 0) {
+                if(numbers[i] != numbers[i % periodLen]){
                     periodLen = i;
                 }
-            } else if (mpf_cmp(array[i], array[0]) == 0) {
+            } else if (numbers[i] == numbers[0]) {
                 periodLen = i;
             }
         }
@@ -66,57 +51,48 @@ void variance_period(mpf_t *array, int size, mpf_t mpf_size, mpf_t average, mpf_
         periodLen = size;
     }
 
-    mpf_set_si(period, periodLen);
-    mpf_div(variance, variance, mpf_size);
-
+    return periodLen;
 }
 
-int main() {
 
-    const int d = 16;
-    long long int num_count;
-    mpf_t num_count_mpf;
-    mpf_t average_result, variance_result, period_result;
+int main(int argc, char* argv[]) {
 
-    // 2^24 numbers
-    mpf_t *numbers = new mpf_t[16777216];
-    for (int i = 0; i < 16777216; i++) {
-        mpf_init(numbers[i]);
+    if(argc!= 2){
+        return 1;
     }
 
-    mpf_init(average_result);
-    mpf_init(variance_result);
-    mpf_init(period_result);
-    mpf_init(num_count_mpf);
-    num_count = 0;
+    int d = atoi(argv[1]);
 
-    while (cin >> numbers[num_count]) {
-        num_count++;
+    mp_bitcnt_t prec = ceil(d * log(10)/log(2));
+    mpf_set_default_prec(prec + 128);
+
+    vector<mpz_class> numbers;
+    mpz_class input;
+
+    mpz_class sum, square_sum;
+
+    while(cin >> input){
+        sum = sum + input;
+        numbers.push_back(input);
+	    square_sum = square_sum + (input*input);
     }
 
-    mpf_set_si(num_count_mpf, num_count);
-    average(numbers, num_count, num_count_mpf, average_result);
-    variance_period(numbers, num_count, num_count_mpf, average_result, variance_result, period_result);
 
-    string* adjusted = new string();
-    adjust_zeros(average_result, adjusted, 5);
-    cout << *adjusted << endl;
+    int size = numbers.size();
+    int periodLen = period(numbers, size);
 
-    adjust_zeros(variance_result, adjusted, 5);
-    cout << *adjusted << endl;
+    mpq_class average(sum, size);
+    mpq_class temp1(square_sum, size);
+    mpq_class temp2(average*average);
+    mpq_class variance(temp1-temp2);
 
-//    cout << setiosflags(ios::fixed);
-   // cout << fixed << setprecision(5) << average_result << endl;
-//    cout << setprecision(5) << variance_result << endl;
+    mpf_class average_float;
+    average_float = average;
+    mpf_class variance_float = variance;
 
-//    gmp_printf (" %.*Ff \n", d, average_result);
-//    gmp_printf (" %.*Ff \n", d, variance_result);
-
-    cout << setprecision(0) << period_result << endl;
-
-    mpf_clear(average_result);
-    mpf_clear(variance_result);
-    mpf_clear(period_result);
+    print(average_float, d);
+    print(variance_float, d);
+    cout << periodLen << endl;
 
     return 0;
 }
